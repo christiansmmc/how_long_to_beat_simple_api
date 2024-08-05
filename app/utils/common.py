@@ -3,7 +3,9 @@ from typing import Dict
 from fake_useragent import UserAgent
 
 HOW_LONG_TO_BEAT_BASE_URL = "https://howlongtobeat.com"
-HOW_LONG_TO_BEAT_SEARCH_URL = f"{HOW_LONG_TO_BEAT_BASE_URL}/api/search"
+HOW_LONG_TO_BEAT_SEARCH_URL = (
+    f"{HOW_LONG_TO_BEAT_BASE_URL}/api/search/4b4cbe570602c88660f7df8ea0cb6b6e"
+)
 HOW_LONG_TO_BEAT_IMAGES_URL = f"{HOW_LONG_TO_BEAT_BASE_URL}/games"
 
 HOW_LONG_TO_BEAT_SEARCH_DEFAULT_PAYLOAD = {
