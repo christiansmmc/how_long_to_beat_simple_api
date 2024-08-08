@@ -1,11 +1,12 @@
 import copy
+import re
 from typing import Dict
+from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
+import requests
 
 HOW_LONG_TO_BEAT_BASE_URL = "https://howlongtobeat.com"
-HOW_LONG_TO_BEAT_SEARCH_URL = (
-    f"{HOW_LONG_TO_BEAT_BASE_URL}/api/search/4b4cbe570602c88660f7df8ea0cb6b6e"
-)
+HOW_LONG_TO_BEAT_SEARCH_URL = f"{HOW_LONG_TO_BEAT_BASE_URL}/api/search"
 HOW_LONG_TO_BEAT_IMAGES_URL = f"{HOW_LONG_TO_BEAT_BASE_URL}/games"
 
 HOW_LONG_TO_BEAT_SEARCH_DEFAULT_PAYLOAD = {
@@ -77,3 +78,36 @@ def get_default_headers():
 
 def get_default_search_payload():
     return copy.deepcopy(HOW_LONG_TO_BEAT_SEARCH_DEFAULT_PAYLOAD)
+
+
+def send_website_request_getcode(parse_all_scripts: bool):
+    # Credits
+    # https://github.com/ScrappyCocco/HowLongToBeat-PythonAPI
+
+    """
+    Function that send a request to howlongtobeat to scrape the /api/search key
+    @return: The string key to use on /api/search
+    """
+    # Make the post request and return the result if is valid
+    headers = get_default_headers()
+    resp = requests.get(HOW_LONG_TO_BEAT_BASE_URL, headers=headers)
+    if resp.status_code == 200 and resp.text is not None:
+        # Parse the HTML content using BeautifulSoup
+        soup = BeautifulSoup(resp.text, "html.parser")
+        # Find all <script> tags with a src attribute containing the substring
+        scripts = soup.find_all("script", src=True)
+        if parse_all_scripts:
+            matching_scripts = [script["src"] for script in scripts]
+        else:
+            matching_scripts = [
+                script["src"] for script in scripts if "_app-" in script["src"]
+            ]
+        for script_url in matching_scripts:
+            script_url = HOW_LONG_TO_BEAT_BASE_URL + script_url
+            script_resp = requests.get(script_url, headers=headers)
+            if script_resp.status_code == 200 and script_resp.text is not None:
+                pattern = r'"/api/search/".concat\("([a-zA-Z0-9]+)"\)'
+                matches = re.findall(pattern, script_resp.text)
+                for match in matches:
+                    return match
+    return None
